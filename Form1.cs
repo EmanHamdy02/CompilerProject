@@ -42,10 +42,14 @@ namespace CompilerPhase1
             string condition_operators = @"\b=|<>|<|>\b";
             //write the identifier, term, statement, else_if_stmt, else_stmt regex here
             string identifier = "";
-            string term = "";
+            string term = @"^(?:\\d+|[A-Za-z_]\\w*|\\w+\\([^)]*\\))$";
+            string String = "^\".+\"$";
+            string Equation = "^(?:\\(*[A-Za-z0-9]+\\)*)(?:\\s*[\\+\\-\\*/]\\s*\\(*[A-Za-z0-9]+\\)*)+$";
+            string Expression = "^\".+\"$|^(?:\\\\d+|[A-Za-z_]\\\\w*|\\\\w+\\\\([^)]*\\\\))$|^(?:\\(*[A-Za-z0-9]+\\)*)(?:\\s*[\\+\\-\\*/]\\s*\\(*[A-Za-z0-9]+\\)*)+$";
             string statement = "";
-            string else_if_stmt = "";
-            string else_stmt = "";
+            string else_if_stmt = "^elseif\\s*\\([^)]*\\)\\s*\\{[^}]*\\}$";
+            string else_stmt = "^else[\\s\\S]+end$";
+            string Repeat_Statement = "^repeat[\\s\\S]+until\\s*\\([^)]*\\)$";
             string condition = identifier + @"\s*" + condition_operators + @"\s*" + term;
             string boolean_operator = @"\b(&&|\|\|)\b";
             string condition_stmt = condition + @"(\s*" + boolean_operator + @"\s*" + condition + ")*";
@@ -53,7 +57,7 @@ namespace CompilerPhase1
 
             string patterns = $"{keywords}|{dataTypes}|{funNames}|{declaration}|{write_stmt}|{function_body}|{function_stmt}|{main_function}|{number}|" +
                 $"{comment_stmt}|{condition_operators}|{term}|{identifier}|{statement}|{else_if_stmt}|{else_stmt}|{condition}|{boolean_operator}|" +
-                $"{condition_stmt}|{if_stmt}";
+                $"{condition_stmt}|{if_stmt}|{String}|{Equation}|{Expression}|{Repeat_Statement}";
             DataTable data = new DataTable();
             data.Columns.Add("Lexeme");
             data.Columns.Add("Tokens");
@@ -138,6 +142,22 @@ namespace CompilerPhase1
                 else if (Regex.IsMatch(lexeme, if_stmt))
                 {
                     type = "If Statement";
+                }
+                else if (Regex.IsMatch(lexeme, String))
+                {
+                    type = "String";
+                }
+                else if (Regex.IsMatch(lexeme, Equation))
+                {
+                    type = "Equation";
+                }
+                else if (Regex.IsMatch(lexeme, Expression))
+                {
+                    type = "Expression";
+                }
+                else if (Regex.IsMatch(lexeme, Repeat_Statement))
+                {
+                    type = "Repeat Statement";
                 }
                 else
                 {
