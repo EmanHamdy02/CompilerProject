@@ -16,9 +16,7 @@ namespace CompilerPhase1
         public Scanner()
         {
             InitializeComponent();
-
         }
-
 
         private void textBox1_TextChanged(object sender, EventArgs e)
         {
@@ -30,9 +28,8 @@ namespace CompilerPhase1
         private void button1_clicked(object sender, EventArgs e)
         {
             string input = textBox1.Text;
-            string keywords = @"\b(| read | write | repeat |
-            until | if | elseif | else | then | return | endl\b";
-            string dataTypes = @"\b(int | float | string )\b";
+            string keywords = @"\b(read|write|repeat|until|if|elseif|else|then|return|endl\b";
+            string dataTypes = @"\b(int|float|string)\b";
             string funNames = @"\b[a-zA-Z][a-zA-z0-9]*\b";
             string declaration = dataTypes + @"\s+" + @"\b[a-zA-Z][a-zA-z0-9]*\b" +
                 @"(\s*:=\s*[^,;]+)?(\s*,\s*" + @"\b[a-zA-Z][a-zA-z0-9]*\b" + @"(\s*:=\s*[^,;]+)?)*\s*;";
@@ -53,14 +50,19 @@ namespace CompilerPhase1
             string boolean_operator = @"\b(&&|\|\|)\b";
             string condition_stmt = condition + @"(\s*" + boolean_operator + @"\s*" + condition + ")*";
             string if_stmt = @"^if\s+" + condition_stmt + @"\s+then\s+" + statement + "+(" + else_if_stmt + "|" + else_stmt + ")*end$";
+
             string patterns = $"{keywords}|{dataTypes}|{funNames}|{declaration}|{write_stmt}|{function_body}|{function_stmt}|{main_function}|{number}|" +
                 $"{comment_stmt}|{condition_operators}|{term}|{identifier}|{statement}|{else_if_stmt}|{else_stmt}|{condition}|{boolean_operator}|" +
                 $"{condition_stmt}|{if_stmt}";
+            DataTable data = new DataTable();
+            data.Columns.Add("Lexeme");
+            data.Columns.Add("Tokens");
             MatchCollection matches = Regex.Matches(input, patterns);
+            string type, lexeme;
             foreach (Match match in matches)
             {
-                string lexeme = match.Value;
-                string type = "";
+                 lexeme = match.Value;
+                 type = "";
                 if (Regex.IsMatch(lexeme, keywords))
                 {
                     type = "Keyword";
@@ -137,13 +139,14 @@ namespace CompilerPhase1
                 {
                     type = "If Statement";
                 }
-
-                DataTable data = new DataTable();
-                data.Columns.Add("Lexeme");
-                data.Columns.Add("Tokens");
-
+                else
+                {
+                    type = "Unknown";
+                }
                 dataGridView1.DataSource = data;
+                data.Rows.Add(lexeme, type);
             }
-        }
+
+        }  
     }
 }
