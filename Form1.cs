@@ -5,9 +5,10 @@ using System.Data;
 using System.Drawing;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using System.Text.RegularExpressions;
+using static System.Windows.Forms.LinkLabel;
 
 namespace CompilerPhase1
 {
@@ -25,10 +26,11 @@ namespace CompilerPhase1
                 button1.Enabled = true;
             }
         }
-        private void button1_clicked(object sender, EventArgs e)
+
+        private void button1_Click(object sender, EventArgs e)
         {
             string input = textBox1.Text;
-            string keywords = @"\b(read|write|repeat|until|if|elseif|else|then|return|endl\b";
+            string keywords = @"\b(read|write|repeat|until|if|elseif|else|then|return|endl)\b";
             string dataTypes = @"\b(int|float|string)\b";
             string funNames = @"\b[a-zA-Z][a-zA-z0-9]*\b";
             string declaration = dataTypes + @"\s+" + @"\b[a-zA-Z][a-zA-z0-9]*\b" +
@@ -41,19 +43,26 @@ namespace CompilerPhase1
             string comment_stmt = @"\/\*[\s\S]*?\*\/";
             string condition_operators = @"\b=|<>|<|>\b";
             //write the identifier, term, statement, else_if_stmt, else_stmt regex here
-            string identifier = "";
+            string identifierPattern = @"^[A-Za-z][A-Za-z0-9]*$";
             string term = "";
             string statement = "";
             string else_if_stmt = "";
             string else_stmt = "";
-            string condition = identifier + @"\s*" + condition_operators + @"\s*" + term;
+            string condition = identifierPattern + @"\s*" + condition_operators + @"\s*" + term;
             string boolean_operator = @"\b(&&|\|\|)\b";
             string condition_stmt = condition + @"(\s*" + boolean_operator + @"\s*" + condition + ")*";
             string if_stmt = @"^if\s+" + condition_stmt + @"\s+then\s+" + statement + "+(" + else_if_stmt + "|" + else_stmt + ")*end$";
+            string arithmeticPattern = @"^[+\-*/]$";
+            string functionCallPattern = @"^[A-Za-z][A-Za-z0-9]*\((([A-Za-z][A-Za-z0-9]*)(,\s*[A-Za-z][A-Za-z0-9]*)*)?\)$";
+            string assignmentPattern = @"^[A-Za-z][A-Za-z0-9]*\s*:=\s*.+$";
+            string returnPattern = @"^return\s+.+;$";
+            string parameterPattern = @"^(int|float|double|char|string)\s+[A-Za-z][A-Za-z0-9]*$";
+            string functionDeclarationPattern = @"^(int|float|double|char|string)\s+[A-Za-z][A-Za-z0-9]*\s*\((\s*(int|float|double|char|string)\s+[A-Za-z][A-Za-z0-9]*(\s*,\s*(int|float|double|char|string)\s+[A-Za-z][A-Za-z0-9]*)*)?\)$";
 
-            string patterns = $"{keywords}|{dataTypes}|{funNames}|{declaration}|{write_stmt}|{function_body}|{function_stmt}|{main_function}|{number}|" +
-                $"{comment_stmt}|{condition_operators}|{term}|{identifier}|{statement}|{else_if_stmt}|{else_stmt}|{condition}|{boolean_operator}|" +
-                $"{condition_stmt}|{if_stmt}";
+            string patterns = $"{keywords}|{dataTypes}|{funNames}|{declaration}|{write_stmt}|{function_body}|{function_stmt}|{main_function}|{number}|{comment_stmt}|{condition_operators}|{condition}|{boolean_operator}|{condition_stmt}|{if_stmt}" +
+            $"{arithmeticPattern}|{identifierPattern}|{functionCallPattern}|{assignmentPattern}|{returnPattern}|{parameterPattern}|{functionDeclarationPattern}";
+            // $"{term}|{identifier}|{statement}|{else_if_stmt}|{else_stmt}|" +
+
             DataTable data = new DataTable();
             data.Columns.Add("Lexeme");
             data.Columns.Add("Tokens");
@@ -61,8 +70,8 @@ namespace CompilerPhase1
             string type, lexeme;
             foreach (Match match in matches)
             {
-                 lexeme = match.Value;
-                 type = "";
+                lexeme = match.Value;
+                type = "";
                 if (Regex.IsMatch(lexeme, keywords))
                 {
                     type = "Keyword";
@@ -103,10 +112,6 @@ namespace CompilerPhase1
                 {
                     type = "Condition Operator";
                 }
-                else if (Regex.IsMatch(lexeme, identifier))
-                {
-                    type = "Identifier";
-                }
                 else if (Regex.IsMatch(lexeme, term))
                 {
                     type = "Term";
@@ -139,14 +144,37 @@ namespace CompilerPhase1
                 {
                     type = "If Statement";
                 }
-                else
+                else if (Regex.IsMatch(lexeme, arithmeticPattern))
                 {
-                    type = "Unknown";
+                    type = "Arithmetic Operator";
+                }
+                else if (Regex.IsMatch(lexeme, identifierPattern))
+                {
+                    type = "Identifier";
+                }
+                else if (Regex.IsMatch(lexeme, functionCallPattern))
+                {
+                    type = "Function Call";
+                }
+                else if (Regex.IsMatch(lexeme, assignmentPattern))
+                {
+                    type = "Assignment";
+                }
+                else if (Regex.IsMatch(lexeme, returnPattern))
+                {
+                    type = "Return Statement";
+                }
+                else if (Regex.IsMatch(lexeme, parameterPattern))
+                {
+                    type = "Parameter";
+                }
+                else if (Regex.IsMatch(lexeme, functionDeclarationPattern))
+                {
+                    type = "Function Declaration";
                 }
                 dataGridView1.DataSource = data;
                 data.Rows.Add(lexeme, type);
             }
-
-        }  
+        }
     }
 }

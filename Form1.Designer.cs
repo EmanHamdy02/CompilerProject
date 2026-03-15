@@ -31,6 +31,8 @@
             this.textBox1 = new System.Windows.Forms.TextBox();
             this.button1 = new System.Windows.Forms.Button();
             this.dataGridView1 = new System.Windows.Forms.DataGridView();
+            this.lex = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.token = new System.Windows.Forms.DataGridViewTextBoxColumn();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).BeginInit();
             this.SuspendLayout();
             // 
@@ -57,6 +59,7 @@
             this.button1.TabIndex = 1;
             this.button1.Text = "Split";
             this.button1.UseVisualStyleBackColor = false;
+            this.button1.Click += new System.EventHandler(this.button1_Click);
             // 
             // dataGridView1
             // 
@@ -64,6 +67,9 @@
             this.dataGridView1.AllowUserToDeleteRows = false;
             this.dataGridView1.BackgroundColor = System.Drawing.SystemColors.ControlLight;
             this.dataGridView1.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            this.dataGridView1.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
+            this.lex,
+            this.token});
             this.dataGridView1.Location = new System.Drawing.Point(658, 55);
             this.dataGridView1.Name = "dataGridView1";
             this.dataGridView1.RowHeadersBorderStyle = System.Windows.Forms.DataGridViewHeaderBorderStyle.Sunken;
@@ -71,6 +77,20 @@
             this.dataGridView1.RowTemplate.Height = 24;
             this.dataGridView1.Size = new System.Drawing.Size(437, 430);
             this.dataGridView1.TabIndex = 2;
+            // 
+            // lex
+            // 
+            this.lex.HeaderText = "Lexems";
+            this.lex.MinimumWidth = 6;
+            this.lex.Name = "lex";
+            this.lex.Width = 125;
+            // 
+            // token
+            // 
+            this.token.HeaderText = "Tokens";
+            this.token.MinimumWidth = 6;
+            this.token.Name = "token";
+            this.token.Width = 125;
             // 
             // Scanner
             // 
@@ -95,6 +115,8 @@
         private System.Windows.Forms.TextBox textBox1;
         private System.Windows.Forms.Button button1;
         private System.Windows.Forms.DataGridView dataGridView1;
+        private System.Windows.Forms.DataGridViewTextBoxColumn lex;
+        private System.Windows.Forms.DataGridViewTextBoxColumn token;
     }
 }
 
