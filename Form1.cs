@@ -40,9 +40,44 @@ namespace CompilerPhase1
             string function_body = @"\{\s*.*?\breturn\b\s+[^;]+;\s*\}";
             string function_stmt = dataTypes + @"\s+" + funNames + @"\s*\(\s*\)\s*" + function_body;
             string main_function = dataTypes + @"\s+main\s*\(\s*\)\s*" + function_body;
-            DataTable data = new DataTable();
+            string patterns= $"{keywords}|{dataTypes}|{funNames}|" +
+                $"{declaration}|{write_stmt}|{function_stmt}|{main_function}";
+            MatchCollection matches = Regex.Matches(input, patterns); 
+            foreach (Match match in matches) {
+                string lexeme = match.Value;
+                string type = "";
+                if(Regex.IsMatch(lexeme, keywords))
+                {
+                    type = "Keyword";
+                }
+                else if (Regex.IsMatch(lexeme, dataTypes))
+                {
+                    type = "Data Type";
+                }
+                else if (Regex.IsMatch(lexeme, funNames))
+                {
+                    type = "Function Name";
+                }
+                else if (Regex.IsMatch(lexeme, declaration))
+                {
+                    type = "Declaration";
+                }
+                else if (Regex.IsMatch(lexeme, write_stmt))
+                {
+                    type = "Write Statement";
+                }
+                else if (Regex.IsMatch(lexeme, function_stmt))
+                {
+                    type = "Function Statement";
+                }
+                else if (Regex.IsMatch(lexeme, main_function))
+                {
+                    type = "Main Function";
+                }
+                DataTable data = new DataTable();
             data.Columns.Add("Lexeme");
             data.Columns.Add("Tokens");
+
             dataGridView1.DataSource = data;
         }
     }
