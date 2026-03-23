@@ -35,9 +35,9 @@ namespace CompilerPhase1
             string declaration = dataTypes + @"\s+" + @"\b[a-zA-Z][a-zA-z0-9]*\b" +
                 @"(\s*:=\s*[^,;]+)?(\s*,\s*" + @"\b[a-zA-Z][a-zA-z0-9]*\b" + @"(\s*:=\s*[^,;]+)?)*\s*;";
             string write_stmt = @"\bwrite\b\s+([^;]+|endl)\s*;";
-            string function_body = @"\{\s*.*?\breturn\b\s+[^;]+;\s*\}";
-            string function_stmt = dataTypes + @"\s+" + funNames+ @"\s*\(\s*\)\s*" + function_body;
-            string main_function = dataTypes + @"\s+main\s*\(\s*\)\s*" + function_body;
+            //string function_body = @"\{\s*.*?\breturn\b\s+[^;]+;\s*\}";
+            //string function_stmt = dataTypes + @"\s+" + funNames+ @"\s*\(\s*\)\s*" + function_body;
+            //string main_function = dataTypes + @"\s+main\s*\(\s*\)\s*" + function_body;
             string number = @"\b\d+(\.\d+)?\b";
             string comment_stmt = @"\/\*[\s\S]*?\*\/";
             string condition_operators = @"(=|<>|<|>)";
@@ -61,11 +61,11 @@ namespace CompilerPhase1
             string functionCallPattern = @"^[A-Za-z][A-Za-z0-9]*\((([A-Za-z][A-Za-z0-9]*)(,\s*[A-Za-z][A-Za-z0-9]*)*)?\)$";
             string assignmentPattern = @"^[A-Za-z][A-Za-z0-9]*\s*:=\s*.+$";
             string returnPattern = @"^return\s+.+;$";
-            string statement = "(" + declaration + "|" + write_stmt + "|" + function_stmt + "|" + Repeat_Statement + "|" + assignmentPattern + "|" + returnPattern + "|" + "|" + condition_stmt + "|" + functionCallPattern + "|" + String + "|" + Equation + "|" + Expression+")";
+            string statement = "(" + declaration + "|" + write_stmt + "|" + Repeat_Statement + "|" + assignmentPattern + "|" + returnPattern + "|" + "|" + condition_stmt + "|" + functionCallPattern + "|" + String + "|" + Equation + "|" + Expression+")";
             string if_stmt = @"^if\s+" + condition_stmt + @"\s+then\s+" + statement + "+(" + else_if_stmt + "|" + else_stmt + ")*end$";
             string parameterPattern = @"^(int|float|double|char|string)\s+[A-Za-z][A-Za-z0-9]*$";
             string functionDeclarationPattern = @"^(int|float|double|char|string)\s+[A-Za-z][A-Za-z0-9]*\s*\((\s*(int|float|double|char|string)\s+[A-Za-z][A-Za-z0-9]*(\s*,\s*(int|float|double|char|string)\s+[A-Za-z][A-Za-z0-9]*)*)?\)$";
-            string patterns = $"{keywords}|{dataTypes}|{declaration}|{write_stmt}|{function_body}|{function_stmt}|{main_function}|{number}|" +
+            string patterns = $"{keywords}|{dataTypes}|{declaration}|{write_stmt}|{number}|" +
                 $"{comment_stmt}|{condition_operators}|{term}|{identifierPattern}|{statement}|{else_if_stmt}|{else_stmt}|{condition}|{boolean_operator}|" +
                 $"{condition_stmt}|{if_stmt}|{String}|{Equation}|{Expression}|{Repeat_Statement}|{arithmeticPattern}|{functionCallPattern}|" +
                 $"{assignmentPattern}|{returnPattern}|{parameterPattern}|{functionDeclarationPattern}";
@@ -98,14 +98,14 @@ namespace CompilerPhase1
                 {
                     type = "Write Statement";
                 }
-                else if (Regex.IsMatch(lexeme, function_stmt))
-                {
-                    type = "Function Statement";
-                }
-                else if (Regex.IsMatch(lexeme, main_function))
-                {
-                    type = "Main Function";
-                }
+                //else if (Regex.IsMatch(lexeme, function_stmt))
+                //{
+                //    type = "Function Statement";
+                //}
+                //else if (Regex.IsMatch(lexeme, main_function))
+                //{
+                //    type = "Main Function";
+                //}
                 else if (Regex.IsMatch(lexeme, number))
                 {
                     type = "Number";
@@ -126,7 +126,7 @@ namespace CompilerPhase1
                 {
                     type = "Term";
                 }
-                
+
                 else if (Regex.IsMatch(lexeme, else_if_stmt))
                 {
                     type = "Else If Statement";
