@@ -4,10 +4,11 @@ using System.ComponentModel;
 using System.Data;
 using System.Drawing;
 using System.Linq;
+using System.Reflection;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using System.Text.RegularExpressions;
 
 namespace CompilerPhase1
 {
@@ -17,13 +18,19 @@ namespace CompilerPhase1
         {
             InitializeComponent();
         }
+        public class Token
+        {
+            public string Value { get; set; }
+            public string Type { get; set; }
+        }
         public class LexicalAnalyzer
         {
             private List<(string Pattern, string Type)> tokenDefinitions;
             private readonly string patterns;
-
+            
             public LexicalAnalyzer()
             {
+                
                 string keywords = @"\b(read|write|repeat|until|if|elseif|else|then|return|endl)\b";
                 string dataTypes = @"\b(int|float|string)\b";
                 string identifierPattern = @"\b[a-zA-Z][a-zA-z0-9]*\b";
@@ -63,7 +70,7 @@ namespace CompilerPhase1
                 string functionDeclarationPattern = @"^(int|float|double|char|string)\s+[A-Za-z][A-Za-z0-9]*\s*\((\s*(int|float|double|char|string)\s+[A-Za-z][A-Za-z0-9]*(\s*,\s*(int|float|double|char|string)\s+[A-Za-z][A-Za-z0-9]*)*)?\)$";
 
                 
-                var tokenDefinitions = new List<(string Pattern, string Type)>
+                 tokenDefinitions = new List<(string Pattern, string Type)>
                 {
                     (keywords, "Keyword"),
                     (dataTypes, "Data Type"),
@@ -94,20 +101,24 @@ namespace CompilerPhase1
                 };
                 patterns = string.Join("|", tokenDefinitions.Select(td => td.Pattern));
             }
-                public DataTable Tokenize(string input)
+                public List<Token> Tokenize(string input)
                 {
                     string type, lexeme;
                     DataTable data = new DataTable();
                     data.Columns.Add("Lexeme");
                     data.Columns.Add("Tokens");
                     MatchCollection matches = Regex.Matches(input, patterns);
+                    List<Token> allTokens = new List<Token>();
 
                     foreach (Match match in matches)
                     {
                         lexeme = match.Value;
                         type = "Unknown";
 
-                        foreach (var definition in tokenDefinitions)
+                    if (string.IsNullOrWhiteSpace(lexeme))
+                        continue;
+
+                    foreach (var definition in tokenDefinitions)
                         {
                             if (Regex.IsMatch(lexeme, definition.Pattern))
                             {
@@ -118,16 +129,50 @@ namespace CompilerPhase1
                                 break;
                             }
                         }
-
-                        data.Rows.Add(lexeme, type);
+                        allTokens.Add(new Token { Value = lexeme, Type = type });
+                        //data.Rows.Add(lexeme, type);
                     }
 
-                return data;
+                return allTokens;
                 }
-
         }
 
-        
+       
+        public class Parser
+        {
+            private List<Token> tokens;
+            private int currentTokenIndex;
+            private Token currentToken;
+
+            public Parser(List<Token> tokens)
+            {
+                this.tokens = tokens;
+                if (tokens.Count> 0)
+                  currentToken = tokens[currentTokenIndex];
+            }
+
+
+            //A method that checks if the current token isn't the end of the code
+            // And check if the token matches the argument passed to the method 
+            // whether it's a value ex: ;, number and it's the same var lexeme in prev code
+            // or a Type ex: identifier
+            private void VerifyToken(string expected)
+            {
+                if (currentTokenIndex < tokens.Count && (currentToken.Value == expected ||
+                    currentToken.Type == expected))
+                {
+                    currentTokenIndex++;
+                    if (currentTokenIndex < tokens.Count)
+                        currentToken = tokens[currentTokenIndex];
+                    else
+                    {
+                        throw new Exception($"Syntax Error: Expected '{expected}' but " +
+                            $"found '{currentToken?.Value}'");
+                    }
+                }
+            }
+        }
+
         private void textBox1_TextChanged(object sender, EventArgs e)
         {
             if (textBox1.Text != null)
@@ -140,7 +185,7 @@ namespace CompilerPhase1
             
             string input = textBox1.Text;
             LexicalAnalyzer myLexer = new LexicalAnalyzer();
-            DataTable data = myLexer.Tokenize(input);
+            List<Token> data = myLexer.Tokenize(input);
             dataGridView1.DataSource = data;
         }
     }
