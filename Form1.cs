@@ -74,135 +74,57 @@ namespace CompilerPhase1
             data.Columns.Add("Tokens");
             MatchCollection matches = Regex.Matches(input, patterns);
             string type, lexeme;
+            var tokenDefinitions = new List<(string Pattern, string Type)>
+            {
+                (keywords, "Keyword"),
+                (dataTypes, "Data Type"),
+                (declaration, "Declaration"),
+                (write_stmt, "Write Statement"),
+                (number, "Number"),
+                (comment_stmt, "Comment"),
+                (condition_operators, "Condition Operator"),
+                (identifierPattern, "Identifier"),
+                (term, "Term"),
+                (else_if_stmt, "Else If Statement"),
+                (else_stmt, "Else Statement"),
+                (condition, "Condition"),
+                (boolean_operator, "Boolean Operator"),
+                (condition_stmt, "Condition Statement"),
+                (if_stmt, "If Statement"),
+                (String, "String"),
+                (Equation, "Equation"),
+                (Expression, "Expression"),
+                (Repeat_Statement, "Repeat Statement"),
+                (arithmeticPattern, "Arithmetic Operator"),
+                (functionCallPattern, "Function Call"),
+                (assignmentPattern, "Assignment"),
+                (returnPattern, "Return Statement"),
+                (parameterPattern, "Parameter"),
+                (functionDeclarationPattern, "Function Declaration"),
+                (statement, "Statement")
+            };
+
+
             foreach (Match match in matches)
             {
                 lexeme = match.Value;
-                type = "";
-                if (Regex.IsMatch(lexeme, keywords))
-                {
-                    type = "Keyword";
-                }
-                else if (Regex.IsMatch(lexeme, dataTypes))
-                {
-                    type = "Data Type";
-                }
-                //else if (Regex.IsMatch(lexeme, funNames))
-                //{
-                //    type = "Function Name";
-                //}
-                else if (Regex.IsMatch(lexeme, declaration))
-                {
-                    type = "Declaration";
-                }
-                else if (Regex.IsMatch(lexeme, write_stmt))
-                {
-                    type = "Write Statement";
-                }
-                //else if (Regex.IsMatch(lexeme, function_stmt))
-                //{
-                //    type = "Function Statement";
-                //}
-                //else if (Regex.IsMatch(lexeme, main_function))
-                //{
-                //    type = "Main Function";
-                //}
-                else if (Regex.IsMatch(lexeme, number))
-                {
-                    type = "Number";
-                }
-                else if (Regex.IsMatch(lexeme, comment_stmt))
-                {
-                    type = "Comment";
-                }
-                else if (Regex.IsMatch(lexeme, condition_operators))
-                {
-                    type = "Condition Operator";
-                }
-                else if (Regex.IsMatch(lexeme, identifierPattern))
-                {
-                    type = "Identifier";
-                }
-                else if (Regex.IsMatch(lexeme, term))
-                {
-                    type = "Term";
-                }
+                type = "Unknown"; 
 
-                else if (Regex.IsMatch(lexeme, else_if_stmt))
+                foreach (var definition in tokenDefinitions)
                 {
-                    type = "Else If Statement";
+                    if (Regex.IsMatch(lexeme, definition.Pattern))
+                    {
+                        if (definition.Type == "Statement" && string.IsNullOrEmpty(lexeme))
+                            continue;
+
+                        type = definition.Type;
+                        break; 
+                    }
                 }
-                else if (Regex.IsMatch(lexeme, else_stmt))
-                {
-                    type = "Else Statement";
-                }
-                else if (Regex.IsMatch(lexeme, condition))
-                {
-                    type = "Condition";
-                }
-                else if (Regex.IsMatch(lexeme, boolean_operator))
-                {
-                    type = "Boolean Operator";
-                }
-                else if (Regex.IsMatch(lexeme, condition_stmt))
-                {
-                    type = "Condition Statement";
-                }
-                else if (Regex.IsMatch(lexeme, if_stmt))
-                {
-                    type = "If Statement";
-                }
-                else if (Regex.IsMatch(lexeme, String))
-                {
-                    type = "String";
-                }
-                else if (Regex.IsMatch(lexeme, Equation))
-                {
-                    type = "Equation";
-                }
-                else if (Regex.IsMatch(lexeme, Expression))
-                {
-                    type = "Expression";
-                }
-                else if (Regex.IsMatch(lexeme, Repeat_Statement))
-                {
-                    type = "Repeat Statement";
-                }
-                else if (Regex.IsMatch(lexeme, arithmeticPattern))
-                {
-                    type = "Arithmetic Operator";
-                }
-                else if (Regex.IsMatch(lexeme, functionCallPattern))
-                {
-                    type = "Function Call";
-                }
-                else if (Regex.IsMatch(lexeme, assignmentPattern))
-                {
-                    type = "Assignment";
-                }
-                else if (Regex.IsMatch(lexeme, returnPattern))
-                {
-                    type = "Return Statement";
-                }
-                else if (Regex.IsMatch(lexeme, parameterPattern))
-                {
-                    type = "Parameter";
-                }
-                else if (Regex.IsMatch(lexeme, functionDeclarationPattern))
-                {
-                    type = "Function Declaration";
-                }
-                else if (Regex.IsMatch(lexeme, statement))
-                {
-                    if (!string.IsNullOrEmpty(lexeme))
-                        type = "Statement";
-                }
-                //else
-                //{
-                //    type = "Unknown";
-                //}
-                dataGridView1.DataSource = data;
+               
                 data.Rows.Add(lexeme, type);
             }
+            dataGridView1.DataSource = data;
         }
     }
 }
