@@ -16,9 +16,7 @@ namespace CompilerPhase1
         public Scanner()
         {
             InitializeComponent();
-            
         }
-       
 
         private void textBox1_TextChanged(object sender, EventArgs e)
         {
@@ -27,7 +25,7 @@ namespace CompilerPhase1
                 button1.Enabled = true;
             }
         }
-        private void button1_clicked (object sender, EventArgs e)
+        private void button1_clicked(object sender, EventArgs e)
         {
             string input = textBox1.Text;
             string keywords = @"\b(read|write|repeat|until|if|elseif|else|then|return|endl\b";
@@ -44,18 +42,131 @@ namespace CompilerPhase1
             string condition_operators = @"\b=|<>|<|>\b";
             //write the identifier, term, statement, else_if_stmt, else_stmt regex here
             string identifier = "";
-            string term = "";
+            string term = @"^(?:\\d+|[A-Za-z_]\\w*|\\w+\\([^)]*\\))$";
+            string String = "^\".+\"$";
+            string Equation = "^(?:\\(*[A-Za-z0-9]+\\)*)(?:\\s*[\\+\\-\\*/]\\s*\\(*[A-Za-z0-9]+\\)*)+$";
+            string Expression = "^\".+\"$|^(?:\\\\d+|[A-Za-z_]\\\\w*|\\\\w+\\\\([^)]*\\\\))$|^(?:\\(*[A-Za-z0-9]+\\)*)(?:\\s*[\\+\\-\\*/]\\s*\\(*[A-Za-z0-9]+\\)*)+$";
             string statement = "";
-            string else_if_stmt = "";
-            string else_stmt = "";
+            string else_if_stmt = "^elseif\\s*\\([^)]*\\)\\s*\\{[^}]*\\}$";
+            string else_stmt = "^else[\\s\\S]+end$";
+            string Repeat_Statement = "^repeat[\\s\\S]+until\\s*\\([^)]*\\)$";
             string condition = identifier + @"\s*" + condition_operators + @"\s*" + term;
             string boolean_operator = @"\b(&&|\|\|)\b";
             string condition_stmt = condition + @"(\s*" + boolean_operator + @"\s*" + condition + ")*";
             string if_stmt = @"^if\s+" + condition_stmt + @"\s+then\s+" + statement + "+(" + else_if_stmt + "|" + else_stmt + ")*end$";
+
+            string patterns = $"{keywords}|{dataTypes}|{funNames}|{declaration}|{write_stmt}|{function_body}|{function_stmt}|{main_function}|{number}|" +
+                $"{comment_stmt}|{condition_operators}|{term}|{identifier}|{statement}|{else_if_stmt}|{else_stmt}|{condition}|{boolean_operator}|" +
+                $"{condition_stmt}|{if_stmt}|{String}|{Equation}|{Expression}|{Repeat_Statement}";
             DataTable data = new DataTable();
             data.Columns.Add("Lexeme");
             data.Columns.Add("Tokens");
-            dataGridView1.DataSource = data;
-        }
+            MatchCollection matches = Regex.Matches(input, patterns);
+            string type, lexeme;
+            foreach (Match match in matches)
+            {
+                 lexeme = match.Value;
+                 type = "";
+                if (Regex.IsMatch(lexeme, keywords))
+                {
+                    type = "Keyword";
+                }
+                else if (Regex.IsMatch(lexeme, dataTypes))
+                {
+                    type = "Data Type";
+                }
+                else if (Regex.IsMatch(lexeme, funNames))
+                {
+                    type = "Function Name";
+                }
+                else if (Regex.IsMatch(lexeme, declaration))
+                {
+                    type = "Declaration";
+                }
+                else if (Regex.IsMatch(lexeme, write_stmt))
+                {
+                    type = "Write Statement";
+                }
+                else if (Regex.IsMatch(lexeme, function_stmt))
+                {
+                    type = "Function Statement";
+                }
+                else if (Regex.IsMatch(lexeme, main_function))
+                {
+                    type = "Main Function";
+                }
+                else if (Regex.IsMatch(lexeme, number))
+                {
+                    type = "Number";
+                }
+                else if (Regex.IsMatch(lexeme, comment_stmt))
+                {
+                    type = "Comment";
+                }
+                else if (Regex.IsMatch(lexeme, condition_operators))
+                {
+                    type = "Condition Operator";
+                }
+                else if (Regex.IsMatch(lexeme, identifier))
+                {
+                    type = "Identifier";
+                }
+                else if (Regex.IsMatch(lexeme, term))
+                {
+                    type = "Term";
+                }
+                else if (Regex.IsMatch(lexeme, statement))
+                {
+                    type = "Statement";
+                }
+                else if (Regex.IsMatch(lexeme, else_if_stmt))
+                {
+                    type = "Else If Statement";
+                }
+                else if (Regex.IsMatch(lexeme, else_stmt))
+                {
+                    type = "Else Statement";
+                }
+                else if (Regex.IsMatch(lexeme, condition))
+                {
+                    type = "Condition";
+                }
+                else if (Regex.IsMatch(lexeme, boolean_operator))
+                {
+                    type = "Boolean Operator";
+                }
+                else if (Regex.IsMatch(lexeme, condition_stmt))
+                {
+                    type = "Condition Statement";
+                }
+                else if (Regex.IsMatch(lexeme, if_stmt))
+                {
+                    type = "If Statement";
+                }
+                else if (Regex.IsMatch(lexeme, String))
+                {
+                    type = "String";
+                }
+                else if (Regex.IsMatch(lexeme, Equation))
+                {
+                    type = "Equation";
+                }
+                else if (Regex.IsMatch(lexeme, Expression))
+                {
+                    type = "Expression";
+                }
+                else if (Regex.IsMatch(lexeme, Repeat_Statement))
+                {
+                    type = "Repeat Statement";
+                }
+                else
+                {
+                    type = "Unknown";
+                }
+                dataGridView1.DataSource = data;
+                data.Rows.Add(lexeme, type);
+            }
+
+        }  
     }
 }
