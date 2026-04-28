@@ -137,7 +137,7 @@ namespace CompilerPhase1
                 }
         }
 
-       
+
         public class Parser
         {
             private List<Token> tokens;
@@ -147,29 +147,122 @@ namespace CompilerPhase1
             public Parser(List<Token> tokens)
             {
                 this.tokens = tokens;
-                if (tokens.Count> 0)
-                  currentToken = tokens[currentTokenIndex];
+                currentTokenIndex = 0;
+                if (tokens.Count > 0)
+                    currentToken = tokens[currentTokenIndex];
             }
 
-
-            //A method that checks if the current token isn't the end of the code
-            // And check if the token matches the argument passed to the method 
-            // whether it's a value ex: ;, number and it's the same var lexeme in prev code
-            // or a Type ex: identifier
+            // Your original verification method
             private void VerifyToken(string expected)
             {
-                if (currentTokenIndex < tokens.Count && (currentToken.Value == expected ||
-                    currentToken.Type == expected))
+                if (currentTokenIndex < tokens.Count && (currentToken.Value == expected || currentToken.Type == expected))
                 {
                     currentTokenIndex++;
                     if (currentTokenIndex < tokens.Count)
                         currentToken = tokens[currentTokenIndex];
                     else
-                    {
-                        throw new Exception($"Syntax Error: Expected '{expected}' but " +
-                            $"found '{currentToken?.Value}'");
-                    }
+                        currentToken = null; // Reached the end of the tokens
                 }
+                else
+                {
+                    string found = currentToken != null ? currentToken.Value : "End of File";
+                    throw new Exception($"Syntax Error: Expected '{expected}' but found '{found}'");
+                }
+            }
+
+            // ==========================================
+            // PERSON 3: YOUR IMPLEMENTED RULES
+            // ==========================================
+
+            // 13) Declaration_Statement
+            public void ParseDeclaration_Statement()
+            {
+                // Because your regex 'declaration' captures the whole statement (e.g., "int x := 5;")
+                // the parser simply verifies the scanner tagged it correctly.
+                VerifyToken("Declaration");
+            }
+
+            // 14) Write_Statement
+            public void ParseWrite_Statement()
+            {
+                // Your regex 'write_stmt' captures the whole statement.
+                VerifyToken("Write Statement");
+            }
+
+            // 9) Equation
+            public void ParseEquation()
+            {
+                // Your regex 'Equation' captures the whole math string.
+                VerifyToken("Equation");
+            }
+
+            // 28) Function_Body
+            // Grammar: {[Statement]*return_statment}
+            public void ParseFunction_Body()
+            {
+                VerifyToken("{"); // Note: You may need to add "{" to your scanner's token definitions
+
+                // Loop through statements until we hit a return statement
+                while (currentToken != null && currentToken.Type != "Return Statement")
+                {
+                    VerifyToken("Statement");
+                }
+
+                VerifyToken("Return Statement");
+                VerifyToken("}"); // Note: You may need to add "}" to your scanner's token definitions
+            }
+
+            // 29) Function_Statement
+            public void ParseFunction_Statement()
+            {
+                VerifyToken("Function Declaration");
+                ParseFunction_Body();
+            }
+
+            // 30) Main_Function
+            public void ParseMain_Function()
+            {
+                VerifyToken("Data Type");
+
+                // Assuming your scanner picks up "main" as an Identifier or Keyword
+                if (currentToken.Value == "main")
+                {
+                    VerifyToken("main");
+                }
+                else
+                {
+                    VerifyToken("Identifier");
+                }
+
+                VerifyToken("("); // Note: Make sure brackets are tokenized in your scanner
+                VerifyToken(")");
+                ParseFunction_Body();
+            }
+
+            // ==========================================
+            // TEAMMATE PLACEHOLDERS
+            // ==========================================
+
+            // Person 2
+            public void ParseExpression()
+            {
+                VerifyToken("Expression");
+            }
+
+            public void ParseTerm()
+            {
+                VerifyToken("Term");
+            }
+
+            // Person 4
+            public void ParseReturn_Statement()
+            {
+                VerifyToken("Return Statement");
+            }
+
+            public void ParseFunction_Declaration()
+            {
+                VerifyToken("Function Declaration");
             }
         }
 
