@@ -4,10 +4,11 @@ using System.ComponentModel;
 using System.Data;
 using System.Drawing;
 using System.Linq;
+using System.Reflection;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using System.Text.RegularExpressions;
 
 namespace CompilerPhase1
 {
@@ -17,6 +18,160 @@ namespace CompilerPhase1
         {
             InitializeComponent();
         }
+        public class Token
+        {
+            public string Value { get; set; }
+            public string Type { get; set; }
+        }
+        public class LexicalAnalyzer
+        {
+            private List<(string Pattern, string Type)> tokenDefinitions;
+            private readonly string patterns;
+            
+            public LexicalAnalyzer()
+            {
+                
+                string keywords = @"\b(read|write|repeat|until|if|elseif|else|then|return|endl)\b";
+                string dataTypes = @"\b(int|float|string)\b";
+                string identifierPattern = @"\b[a-zA-Z][a-zA-z0-9]*\b";
+                string funNames = @"\b[a-zA-Z]\w*(?=\s*\()";
+                string declaration = dataTypes + @"\s+" + @"\b[a-zA-Z][a-zA-z0-9]*\b" +
+                    @"(\s*:=\s*[^,;]+)?(\s*,\s*" + @"\b[a-zA-Z][a-zA-z0-9]*\b" + @"(\s*:=\s*[^,;]+)?)*\s*;";
+                string write_stmt = @"\bwrite\b\s+([^;]+|endl)\s*;";
+                //string function_body = @"\{\s*.*?\breturn\b\s+[^;]+;\s*\}";
+                //string function_stmt = dataTypes + @"\s+" + funNames+ @"\s*\(\s*\)\s*" + function_body;
+                //string main_function = dataTypes + @"\s+main\s*\(\s*\)\s*" + function_body;
+                string number = @"\b\d+(\.\d+)?\b";
+                string comment_stmt = @"\/\*[\s\S]*?\*\/";
+                string condition_operators = @"(=|<>|<|>)";
+
+                string term = @"^(?:\\d+|[A-Za-z_]\w*|\w+\([^)]*\))$";
+
+                string String = "^\".+\"$";
+                string Equation = @"^(?:\(*[A-Za-z0-9]+\)*)(?:\s*[\+\-\*/]\s*\(*[A-Za-z0-9]+\)*)+$";
+                //"^(?:\\(*[A-Za-z0-9]+\\)*)(?:\\s*[\\+\\-\\*/]\\s*\\(*[A-Za-z0-9]+\\)*)+$";
+                string Expression = String + "|" + term + "|" + Equation;
+                //"^\".+\"$|^(?:\\\\d+|[A-Za-z_]\\\\w*|\\\\w+\\\\([^)]*\\\\))$|^(?:\\(*[A-Za-z0-9]+\\)*)(?:\\s*[\\+\\-\\*/]\\s*\\(*[A-Za-z0-9]+\\)*)+$";
+                string else_if_stmt = "^elseif\\s*\\([^)]*\\)\\s*\\{[^}]*\\}$";
+                string else_stmt = "^else[\\s\\S]+end$";
+                string Repeat_Statement = "^repeat[\\s\\S]+until\\s*\\([^)]*\\)$";
+                string condition = identifierPattern + @"\s*" + condition_operators + @"\s*" + term;
+                string boolean_operator = @"\b(&&|\|\|)\b";
+
+                string condition_stmt = @"^" + condition + @"(\s*" + boolean_operator + @"\s*" + condition + @")*$";
+                //condition + @"(\s*" + boolean_operator + @"\s*" + condition + ")*";
+                string arithmeticPattern = @"^[+\-*/]$";
+                string functionCallPattern = @"^[A-Za-z][A-Za-z0-9]*\((([A-Za-z][A-Za-z0-9]*)(,\s*[A-Za-z][A-Za-z0-9]*)*)?\)$";
+                string assignmentPattern = @"^[A-Za-z][A-Za-z0-9]*\s*:=\s*.+$";
+                string returnPattern = @"^return\s+.+;$";
+                string statement = "(" + declaration + "|" + write_stmt + "|" + Repeat_Statement + "|" + assignmentPattern + "|" + returnPattern + "|" + "|" + condition_stmt + "|" + functionCallPattern + "|" + String + "|" + Equation + "|" + Expression + ")";
+                string if_stmt = @"^if\s+" + condition_stmt + @"\s+then\s+" + statement + "+(" + else_if_stmt + "|" + else_stmt + ")*end$";
+                string parameterPattern = @"^(int|float|double|char|string)\s+[A-Za-z][A-Za-z0-9]*$";
+                string functionDeclarationPattern = @"^(int|float|double|char|string)\s+[A-Za-z][A-Za-z0-9]*\s*\((\s*(int|float|double|char|string)\s+[A-Za-z][A-Za-z0-9]*(\s*,\s*(int|float|double|char|string)\s+[A-Za-z][A-Za-z0-9]*)*)?\)$";
+
+                
+                 tokenDefinitions = new List<(string Pattern, string Type)>
+                {
+                    (keywords, "Keyword"),
+                    (dataTypes, "Data Type"),
+                    (declaration, "Declaration"),
+                    (write_stmt, "Write Statement"),
+                    (number, "Number"),
+                    (comment_stmt, "Comment"),
+                    (condition_operators, "Condition Operator"),
+                    (identifierPattern, "Identifier"),
+                    (term, "Term"),
+                    (else_if_stmt, "Else If Statement"),
+                    (else_stmt, "Else Statement"),
+                    (condition, "Condition"),
+                    (boolean_operator, "Boolean Operator"),
+                    (condition_stmt, "Condition Statement"),
+                    (if_stmt, "If Statement"),
+                    (String, "String"),
+                    (Equation, "Equation"),
+                    (Expression, "Expression"),
+                    (Repeat_Statement, "Repeat Statement"),
+                    (arithmeticPattern, "Arithmetic Operator"),
+                    (functionCallPattern, "Function Call"),
+                    (assignmentPattern, "Assignment"),
+                    (returnPattern, "Return Statement"),
+                    (parameterPattern, "Parameter"),
+                    (functionDeclarationPattern, "Function Declaration"),
+                    (statement, "Statement")
+                };
+                patterns = string.Join("|", tokenDefinitions.Select(td => td.Pattern));
+            }
+                public List<Token> Tokenize(string input)
+                {
+                    string type, lexeme;
+                    DataTable data = new DataTable();
+                    data.Columns.Add("Lexeme");
+                    data.Columns.Add("Tokens");
+                    MatchCollection matches = Regex.Matches(input, patterns);
+                    List<Token> allTokens = new List<Token>();
+
+                    foreach (Match match in matches)
+                    {
+                        lexeme = match.Value;
+                        type = "Unknown";
+
+                    if (string.IsNullOrWhiteSpace(lexeme))
+                        continue;
+
+                    foreach (var definition in tokenDefinitions)
+                        {
+                            if (Regex.IsMatch(lexeme, definition.Pattern))
+                            {
+                                if (definition.Type == "Statement" && string.IsNullOrEmpty(lexeme))
+                                    continue;
+
+                                type = definition.Type;
+                                break;
+                            }
+                        }
+                        allTokens.Add(new Token { Value = lexeme, Type = type });
+                        //data.Rows.Add(lexeme, type);
+                    }
+
+                return allTokens;
+                }
+        }
+
+       
+        public class Parser
+        {
+            private List<Token> tokens;
+            private int currentTokenIndex;
+            private Token currentToken;
+
+            public Parser(List<Token> tokens)
+            {
+                this.tokens = tokens;
+                if (tokens.Count> 0)
+                  currentToken = tokens[currentTokenIndex];
+            }
+
+
+            //A method that checks if the current token isn't the end of the code
+            // And check if the token matches the argument passed to the method 
+            // whether it's a value ex: ;, number and it's the same var lexeme in prev code
+            // or a Type ex: identifier
+            private void VerifyToken(string expected)
+            {
+                if (currentTokenIndex < tokens.Count && (currentToken.Value == expected ||
+                    currentToken.Type == expected))
+                {
+                    currentTokenIndex++;
+                    if (currentTokenIndex < tokens.Count)
+                        currentToken = tokens[currentTokenIndex];
+                    else
+                    {
+                        throw new Exception($"Syntax Error: Expected '{expected}' but " +
+                            $"found '{currentToken?.Value}'");
+                    }
+                }
+            }
+        }
 
         private void textBox1_TextChanged(object sender, EventArgs e)
         {
@@ -25,148 +180,13 @@ namespace CompilerPhase1
                 button1.Enabled = true;
             }
         }
-        private void button1_clicked(object sender, EventArgs e)
+        private void button1_Click(object sender, EventArgs e)
         {
+            
             string input = textBox1.Text;
-            string keywords = @"\b(read|write|repeat|until|if|elseif|else|then|return|endl\b";
-            string dataTypes = @"\b(int|float|string)\b";
-            string funNames = @"\b[a-zA-Z][a-zA-z0-9]*\b";
-            string declaration = dataTypes + @"\s+" + @"\b[a-zA-Z][a-zA-z0-9]*\b" +
-                @"(\s*:=\s*[^,;]+)?(\s*,\s*" + @"\b[a-zA-Z][a-zA-z0-9]*\b" + @"(\s*:=\s*[^,;]+)?)*\s*;";
-            string write_stmt = @"\bwrite\b\s+([^;]+|endl)\s*;";
-            string function_body = @"\{\s*.*?\breturn\b\s+[^;]+;\s*\}";
-            string function_stmt = dataTypes + @"\s+" + funNames + @"\s*\(\s*\)\s*" + function_body;
-            string main_function = dataTypes + @"\s+main\s*\(\s*\)\s*" + function_body;
-            string number = @"^\d+(\.\d+)?$";
-            string comment_stmt = @"\/\*[\s\S]*?\*\/";
-            string condition_operators = @"\b=|<>|<|>\b";
-            //write the identifier, term, statement, else_if_stmt, else_stmt regex here
-            string identifier = "";
-            string term = @"^(?:\\d+|[A-Za-z_]\\w*|\\w+\\([^)]*\\))$";
-            string String = "^\".+\"$";
-            string Equation = "^(?:\\(*[A-Za-z0-9]+\\)*)(?:\\s*[\\+\\-\\*/]\\s*\\(*[A-Za-z0-9]+\\)*)+$";
-            string Expression = "^\".+\"$|^(?:\\\\d+|[A-Za-z_]\\\\w*|\\\\w+\\\\([^)]*\\\\))$|^(?:\\(*[A-Za-z0-9]+\\)*)(?:\\s*[\\+\\-\\*/]\\s*\\(*[A-Za-z0-9]+\\)*)+$";
-            string statement = "";
-            string else_if_stmt = "^elseif\\s*\\([^)]*\\)\\s*\\{[^}]*\\}$";
-            string else_stmt = "^else[\\s\\S]+end$";
-            string Repeat_Statement = "^repeat[\\s\\S]+until\\s*\\([^)]*\\)$";
-            string condition = identifier + @"\s*" + condition_operators + @"\s*" + term;
-            string boolean_operator = @"\b(&&|\|\|)\b";
-            string condition_stmt = condition + @"(\s*" + boolean_operator + @"\s*" + condition + ")*";
-            string if_stmt = @"^if\s+" + condition_stmt + @"\s+then\s+" + statement + "+(" + else_if_stmt + "|" + else_stmt + ")*end$";
-
-            string patterns = $"{keywords}|{dataTypes}|{funNames}|{declaration}|{write_stmt}|{function_body}|{function_stmt}|{main_function}|{number}|" +
-                $"{comment_stmt}|{condition_operators}|{term}|{identifier}|{statement}|{else_if_stmt}|{else_stmt}|{condition}|{boolean_operator}|" +
-                $"{condition_stmt}|{if_stmt}|{String}|{Equation}|{Expression}|{Repeat_Statement}";
-            DataTable data = new DataTable();
-            data.Columns.Add("Lexeme");
-            data.Columns.Add("Tokens");
-            MatchCollection matches = Regex.Matches(input, patterns);
-            string type, lexeme;
-            foreach (Match match in matches)
-            {
-                 lexeme = match.Value;
-                 type = "";
-                if (Regex.IsMatch(lexeme, keywords))
-                {
-                    type = "Keyword";
-                }
-                else if (Regex.IsMatch(lexeme, dataTypes))
-                {
-                    type = "Data Type";
-                }
-                else if (Regex.IsMatch(lexeme, funNames))
-                {
-                    type = "Function Name";
-                }
-                else if (Regex.IsMatch(lexeme, declaration))
-                {
-                    type = "Declaration";
-                }
-                else if (Regex.IsMatch(lexeme, write_stmt))
-                {
-                    type = "Write Statement";
-                }
-                else if (Regex.IsMatch(lexeme, function_stmt))
-                {
-                    type = "Function Statement";
-                }
-                else if (Regex.IsMatch(lexeme, main_function))
-                {
-                    type = "Main Function";
-                }
-                else if (Regex.IsMatch(lexeme, number))
-                {
-                    type = "Number";
-                }
-                else if (Regex.IsMatch(lexeme, comment_stmt))
-                {
-                    type = "Comment";
-                }
-                else if (Regex.IsMatch(lexeme, condition_operators))
-                {
-                    type = "Condition Operator";
-                }
-                else if (Regex.IsMatch(lexeme, identifier))
-                {
-                    type = "Identifier";
-                }
-                else if (Regex.IsMatch(lexeme, term))
-                {
-                    type = "Term";
-                }
-                else if (Regex.IsMatch(lexeme, statement))
-                {
-                    type = "Statement";
-                }
-                else if (Regex.IsMatch(lexeme, else_if_stmt))
-                {
-                    type = "Else If Statement";
-                }
-                else if (Regex.IsMatch(lexeme, else_stmt))
-                {
-                    type = "Else Statement";
-                }
-                else if (Regex.IsMatch(lexeme, condition))
-                {
-                    type = "Condition";
-                }
-                else if (Regex.IsMatch(lexeme, boolean_operator))
-                {
-                    type = "Boolean Operator";
-                }
-                else if (Regex.IsMatch(lexeme, condition_stmt))
-                {
-                    type = "Condition Statement";
-                }
-                else if (Regex.IsMatch(lexeme, if_stmt))
-                {
-                    type = "If Statement";
-                }
-                else if (Regex.IsMatch(lexeme, String))
-                {
-                    type = "String";
-                }
-                else if (Regex.IsMatch(lexeme, Equation))
-                {
-                    type = "Equation";
-                }
-                else if (Regex.IsMatch(lexeme, Expression))
-                {
-                    type = "Expression";
-                }
-                else if (Regex.IsMatch(lexeme, Repeat_Statement))
-                {
-                    type = "Repeat Statement";
-                }
-                else
-                {
-                    type = "Unknown";
-                }
-                dataGridView1.DataSource = data;
-                data.Rows.Add(lexeme, type);
-            }
-
-        }  
+            LexicalAnalyzer myLexer = new LexicalAnalyzer();
+            List<Token> data = myLexer.Tokenize(input);
+            dataGridView1.DataSource = data;
+        }
     }
 }
