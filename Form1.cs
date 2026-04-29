@@ -154,7 +154,7 @@ namespace CompilerPhase1
 
             //A method that checks if the current token isn't the end of the code
             // And check if the token matches the argument passed to the method 
-            // whether it's a value ex: ;, number and it's the same var lexeme in prev code
+            // whether it's a value ex: ;, number (Value is the same var lexeme in prev code)
             // or a Type ex: identifier
             private void VerifyToken(string expected)
             {
@@ -170,7 +170,7 @@ namespace CompilerPhase1
                             $"found '{currentToken?.Value}'");
                     }
                 }
-            }
+            }         
         }
 
         private void textBox1_TextChanged(object sender, EventArgs e)
