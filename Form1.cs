@@ -137,7 +137,7 @@ namespace CompilerPhase1
                 }
         }
 
-       
+
         public class Parser
         {
             private List<Token> tokens;
@@ -147,19 +147,19 @@ namespace CompilerPhase1
             public Parser(List<Token> tokens)
             {
                 this.tokens = tokens;
-                if (tokens.Count> 0)
-                  currentToken = tokens[currentTokenIndex];
+                currentTokenIndex = 0;
+                if (tokens.Count > 0)
+                    currentToken = tokens[currentTokenIndex];
             }
 
 
             //A method that checks if the current token isn't the end of the code
             // And check if the token matches the argument passed to the method 
-            // whether it's a value ex: ;, number (Value is the same var lexeme in prev code)
+            // whether it's a value ex: ;, number and it's the same var lexeme in prev code
             // or a Type ex: identifier
             private void VerifyToken(string expected)
             {
-                if (currentTokenIndex < tokens.Count && (currentToken.Value == expected ||
-                    currentToken.Type == expected))
+                if (currentTokenIndex < tokens.Count && (currentToken.Value == expected || currentToken.Type == expected))
                 {
                     currentTokenIndex++;
                     if (currentTokenIndex < tokens.Count)
@@ -170,7 +170,7 @@ namespace CompilerPhase1
                             $"found '{currentToken?.Value}'");
                     }
                 }
-            }         
+            }
         }
 
         private void textBox1_TextChanged(object sender, EventArgs e)
