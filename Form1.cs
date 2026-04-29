@@ -373,16 +373,67 @@ namespace CompilerPhase1
             }
 
             // Person 4
-            public void ParseReturn_Statement()
+            // 6) Function_Call: Identifier ( [Identifier {, Identifier}] )
+            public void ParseFunction_Call()
             {
-                VerifyToken("Return Statement");
+                VerifyToken("Identifier"); // The Function Name
+                VerifyToken("(");
+
+                // Handle zero or more Identifiers separated by commas
+                if (currentToken != null && currentToken.Type == "Identifier")
+                {
+                    VerifyToken("Identifier");
+                    while (currentToken != null && currentToken.Value == ",")
+                    {
+                        VerifyToken(",");
+                        VerifyToken("Identifier");
+                    }
+                }
+
+                VerifyToken(")");
             }
 
+            // 11) Assignment_Statement: Identifier := Expression
+            public void ParseAssignment_Statement()
+            {
+                VerifyToken("Identifier");
+                VerifyToken(":=");
+                ParseExpression(); // Reuse Person 2's Expression logic
+            }
+
+            // 16) Return_Statement: return Expression ;
+            public void ParseReturn_Statement()
+            {
+                VerifyToken("return"); // Reserved Keyword
+                ParseExpression();
+                VerifyToken(";");
+            }
+
+            // 26) Parameter: Datatype Identifier
+            public void ParseParameter()
+            {
+                VerifyToken("Data Type");
+                VerifyToken("Identifier");
+            }
+
+            // 27) Function_Declaration: Datatype FunctionName ( [Parameter {, Parameter}] )
             public void ParseFunction_Declaration()
             {
-                VerifyToken("Function Name");
+                VerifyToken("Data Type");
+                VerifyToken("Identifier"); // FunctionName
                 VerifyToken("(");
-                VerifyToken("Parameter");
+
+                // Handle zero or more Parameters separated by commas
+                if (currentToken != null && currentToken.Type == "Data Type")
+                {
+                    ParseParameter();
+                    while (currentToken != null && currentToken.Value == ",")
+                    {
+                        VerifyToken(",");
+                        ParseParameter();
+                    }
+                }
+
                 VerifyToken(")");
             }
             //Person 1
